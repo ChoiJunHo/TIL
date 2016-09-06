@@ -5,11 +5,14 @@ class Content extends Component{
   render(){
     return(
       <div>
-        <h2>Content</h2>
-        <p>Hey!</p>
+        <h2>{this.props.title}</h2>
+        <p>{this.props.body}</p>
       </div>
     );
   }
 }
-
+Content.propType={
+  title: React.PropTypes.string,
+  body: React.PropTypes.string.isRequired
+}
 export default Content;
