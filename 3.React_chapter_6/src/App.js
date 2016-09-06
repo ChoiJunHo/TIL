@@ -19,7 +19,8 @@ class Contacts extends React.Component {
             {name: "Betty", phone: "010-0000-0002"},
             {name: "Charlie", phone: "010-0000-0003"},
             {name: "David", phone: "010-0000-0004"}
-        ]
+        ],
+        selectedKey: -1
       };
     }
     _insertContact(name, phone){
@@ -30,6 +31,23 @@ class Contacts extends React.Component {
       });
       this.setState(newState);
     }
+    _onSelect(key){
+      if(key === this.state.selectedKey){
+        console.log("key select canceeled");
+        this.setState({
+          selectedKey: -1
+        });
+        return;
+      }
+    }
+    _isSelected(key){
+      if(this.props.selectedKey === key){
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
     render(){
         return(
             <div>
@@ -37,7 +55,7 @@ class Contacts extends React.Component {
                 <ul>
                     {this.state.contactData.map((contact, i) => {
                       return(
-                        <ContactsInfo name={contact.name} phone={contact.phone} key={i}/>
+                        <ContactInfo name={contact.name} phone={contact.phone} key={i} contactKey={i} isSelected={this._isSelected.bind(this)(i)} onSelect={this._onSelect.bind(this)}/>
                       );
                     })}
                 </ul>
@@ -47,10 +65,20 @@ class Contacts extends React.Component {
     }
 }
 
-class ContactsInfo extends React.Component {
+class ContactInfo extends React.Component {
+    handleClick(e){
+        this.props.onSelect(this.props.contactKey);
+    }
     render(){
+      let getStyle = isSelect => {
+        if(!isSelect) return;
+        let style={
+          fontWeight: 'bold', backgroundColor: '#4efcd8'
+        };
+        return style;
+      }
         return(
-          <li>{this.props.name} {this.props.phone}</li>
+          <li style={getStyle(this.props.isSelected)} onClick={this.handleClick.bind(this)}>{this.props.name} {this.props.phone}</li>
         );
     }
 }
