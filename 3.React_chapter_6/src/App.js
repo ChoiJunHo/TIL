@@ -3,7 +3,6 @@ import update from 'react-addons-update'
 
 class App extends React.Component {
     render(){
-
         return (
                 <Contacts/>
         );
@@ -20,7 +19,10 @@ class Contacts extends React.Component {
             {name: "Charlie", phone: "010-0000-0003"},
             {name: "David", phone: "010-0000-0004"}
         ],
-        selectedKey: -1
+        selectedKey: -1,
+        selected: {
+          name: "", phone: ""
+        }
       };
     }
     _insertContact(name, phone){
@@ -33,26 +35,63 @@ class Contacts extends React.Component {
     }
     _onSelect(key){
       if(key === this.state.selectedKey){
-        console.log("key select canceeled");
         this.setState({
           selectedKey: -1
         });
         return;
       }
+
+      this.setState({
+        selectedKey: key,
+        selected: this.state.contactData[key]
+      });
     }
+
     _isSelected(key){
-      if(this.props.selectedKey === key){
+      if(this.state.selectedKey === -1){
+        return false;
+      }
+      if(this.state.selectedKey === key){
         return true;
       }
       else{
         return false;
       }
     }
+
+    _deleteContract(){
+      if(this.state.selectedKey === -1){
+        return;
+      }
+      this.setState({
+        contactData: update(
+          this.state.contactData,
+          {
+            $splice: [[this.state.selectedKey, 1]]
+          }
+        ),
+        selectedKey: -1
+      });
+    }
+
+    _editContact(name, phone){
+      this.setState({
+        contactData: update(
+          this.state.contactData,
+          {
+            [this.state.selectedKey]: {name: {$set: name}, phone: {$set: phone}}
+          }
+        )
+        ,selected:{name: name, phone: phone}
+      });
+    }
+
     render(){
         return(
             <div>
                 <h1>Contacts</h1>
                 <ul>
+                {/* 반복문 */}
                     {this.state.contactData.map((contact, i) => {
                       return(
                         <ContactInfo name={contact.name} phone={contact.phone} key={i} contactKey={i} isSelected={this._isSelected.bind(this)(i)} onSelect={this._onSelect.bind(this)}/>
@@ -60,6 +99,8 @@ class Contacts extends React.Component {
                     })}
                 </ul>
                 <ContractCreator onInsert={this._insertContact.bind(this)}/>
+                <ContactRemover onRemove={this._deleteContract.bind(this)}/>
+                <ContactEditor selected={this.state.selected} isSelected={this._isSelected.bind(this)(this.state.selectedKey)} onEdit={this._editContact.bind(this)}/>
             </div>
         );
     }
@@ -69,8 +110,14 @@ class ContactInfo extends React.Component {
     handleClick(e){
         this.props.onSelect(this.props.contactKey);
     }
+    shouldComponentUpdate(nextProps, nextState){
+      return (JSON.stringify(nextProps) !== JSON.stringify(this.props));
+    }
+
     render(){
+        console.log("rendered: " + this.props.name);
       let getStyle = isSelect => {
+        console.log('isSelect:'+isSelect);
         if(!isSelect) return;
         let style={
           fontWeight: 'bold', backgroundColor: '#4efcd8'
@@ -102,6 +149,7 @@ class ContractCreator extends React.Component{
     this.setState({name:"", phone:""});
   }
   render(){
+      console.log("rendered Creator button");
     return(
       <div>
         <p>
@@ -110,6 +158,52 @@ class ContractCreator extends React.Component{
           <button onClick={this.handleClick.bind(this)}>Insert</button>
         </p>
       </div>
+    )
+  }
+}
+
+class ContactRemover extends React.Component{
+  handleClick(){
+    this.props.onRemove();
+  }
+
+  render(){
+      console.log("rendered Remover button");
+    return(
+      <button onClick={this.handleClick.bind(this)}>Remove selected contact</button>
+    )
+  }
+}
+
+class ContactEditor extends React.Component{
+  constructor(props){
+    super(props);
+    this.state = {name: "", phone: ""}
+  }
+  // 내장메소드
+  componentWillReceiveProps(props){
+    this.setState({name: props.selected.name, phone: props.selected.phone});
+  }
+  handleClick(){
+    // console.log('this.props.isSelected : ' + this.props.isSelected)
+    if(this.props.isSelected){
+      this.props.onEdit(this.state.name, this.state.phone);
+    }
+  }
+
+  handleChange(e){
+    var newState = {};
+    newState[e.target.name] = e.target.value;
+    this.setState(newState);
+  }
+  render(){
+      console.log("rendered edit button");
+    return(
+      <div><p>
+        <input type="text" name="name" placeholder="name" value={this.state.name} onChange={this.handleChange.bind(this)}/>
+        <input type="text" name="phone" placeholder="phone" value={this.state.phone} onChange={this.handleChange.bind(this)}/>
+        <button onClick={this.handleClick.bind(this)}>Edit</button>
+      </p></div>
     )
   }
 }
