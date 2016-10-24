@@ -1,8 +1,9 @@
 import React from 'react';
+import Logo from './headers/Logo';
 class Header extends React.Component {
   render(){
     return(
-      <h1>{this.props.title}</h1>
+      <Logo title={this.props.title}/>
     );
   }
 }
